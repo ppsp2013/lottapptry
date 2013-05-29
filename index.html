@@ -1,0 +1,224 @@
+<html>
+<head>
+		<!-- <link type="text/css" href="css/le-frog/jquery-ui-1.8.11.custom.css" rel="stylesheet" />	-->
+		<link href="components/lungo.css" rel="stylesheet">
+	  <link href="components/lungo.icon.brand.css" rel="stylesheet">
+	  <link href="components/lungo.icon.css" rel="stylesheet">
+	  <link href="components/theme.lungo.css" rel="stylesheet">
+		<script type="text/javascript" src="js/jquery-1.5.1.min.js"></script>
+		<script type="text/javascript" src="js/jquery-ui-1.8.11.custom.min.js"></script>
+<script>
+	$(document).ready(function(){
+   for (k = 1; k <= 7; k++){
+      $("#contractLevel").append("<option value='" + k+ "'>" + k + "</option>");
+      $("#ourLevel").append("<option value='" + k+ "'>" + k + "</option>");
+      $("#theirLevel").append("<option value='" + k+ "'>" + k + "</option>");
+    };
+   for (k=0;k<=13;k++){
+   	$("#totalTricks").append("<option value='" + (k+14)+ "'>" + (k+14) + "</option>");
+  }
+  $("#totalTricks option:[value=27]").remove();
+  $("button").button();
+  
+  // Events
+  // Here is the code of the events for the components of the webpage
+  $("#contractLevel").change(function() {  	
+   	$("#result option").remove();
+    for (k = 0; k<=13; k++){
+  	  $("#result").append('<option value="'+(parseInt(13-$("#contractLevel").val())-k-6)+'">'+((parseInt(13-$("#contractLevel").val())-k-6)>0?'+'+(parseInt(13-$("#contractLevel").val())-k-6):(parseInt(13-$("#contractLevel").val())-k-6))+'</option>');
+  	  };	    	   
+  }).trigger('change');
+  $("#calPairScoreBtn").click(function (){
+  	var paraStr="<table><tr>";
+  			for(t=limit(parseInt($("#totalTricks").val())-2);t<=limit(parseInt($("#totalTricks").val())+2);t++){
+  				paraStr+="<td><font color='blue'><b>"+t+" Total Tricks</b></font><br />"+makeTable(0,13,t,$("#ourLevel").val(),$("#ourSuit").val(),$("#theirLevel").val(),$("#theirSuit").val(),$("#dbledPair").val(),$("#vuln").val())+"</td>";
+  			}
+  			paraStr+="</tr></table>";
+  			dispAccordion(paraStr);
+  });
+  
+  // Functions
+  // Here is the functions with names 'coz I don't know how to write nameless functions lol
+  function limit(paraNum){
+		if(paraNum<14) paraNum=14;
+		if(paraNum>26) paraNum=26;
+		return paraNum;
+	
+  }
+  function calScore(a,b,c,d,e){
+  	return d<0?Down(-d,c,parseInt(e)):Make(a,b,d,c,e);
+  }
+  function Make(cont,suit,nots,dbl,vul){
+	var sum_pts=0;
+	var ppt = Math.pow(2,dbl);
+	var ppot;
+	if (suit==1) ppt*=20;
+	else {
+		ppt*=30; 
+		if(suit==3) sum_pts+=10*Math.pow(2,dbl); 
+	};
+	ppot=ppt;		
+	sum_pts+=ppt*cont;
+	if(sum_pts<100) sum_pts+=50;
+	else {
+		if(cont>=6) sum_pts+=(500+250*vul)*(cont-5);
+		sum_pts+=300+200*vul;
+  }
+  if(dbl!=0) ppot=(100+100*vul)*dbl;
+  sum_pts+=ppot*nots+50*dbl;
+  return sum_pts;
+  }
+  function Down(nots,dbl,vul){
+  	if(vul==nots) return -100*Math.pow(2,dbl);
+  	if(dbl==0) return -50*nots*(1+vul);
+  	nots+=vul;
+  	if(nots<=3) return -(100+(nots-1)*200)*dbl;
+  	return -(500+(nots-3)*300)*dbl;  	
+  }
+  function dispDialog(stringpara){
+  	$("#dialog").html(stringpara);
+  	$( "#dialog" ).dialog( "open" );
+			return false;
+  }
+  function dispDialog2(stringpara){
+  	dispDialog(stringpara);
+  		return false;
+  }
+  function dispAccordion(stringpara){
+		$("#accordionContent").html(stringpara);
+		$( "#accordion" ).show("fold");
+  }
+  function makeTable(start,end,ttks,ourlv,ourst,thrlv,thrst,dblp,vulna){
+  	var parastr="<table class='dispTable'><tr><td colspan='2'>Ours</td><td colspan='2'>Theirs</td><td>Net</td></tr>";
+  	if(start<0) start=0;
+  	if(end>13) end=13;
+  	start=parseInt(start);
+  	end=parseInt(end);
+  	for(k=start;k<=end;k++){
+  		var ourScore=calScore(ourlv,ourst,dblp%2,k-ourlv-6,vulna%2);
+  		var ourResult=(k-ourlv-6)>0?'+'+(k-ourlv-6):(k-ourlv-6);
+  		var theirResult=((ttks-k)>13?13:(ttks-k))-thrlv-6;
+  		var theirScore=calScore(thrlv,thrst,Math.floor(dblp/2),theirResult,Math.floor(vulna/2));
+  		parastr+="<tr><td>"+ourResult+"</td><td>"+ourScore+"</td><td>"+theirScore+"</td><td>"+(theirResult>0?'+'+theirResult:theirResult)+"</td><td>"+((ourScore+theirScore)>=0?'<b><font color="green">+'+(ourScore+theirScore)+'</font></b>':("<font color='red'>"+(ourScore+theirScore)+"</font>"))+"</td></tr>";
+    }
+    parastr+="</table>";
+    return parastr;
+  }
+}); 
+</script>
+	<style>
+		td { padding: .4em; border-style:solid; border-width:1px; vertical-align: center;}
+		th { color: white; text-align: center; vertical-align: center;}
+	</style>
+</head>
+
+<body class="app">
+	<section id="main" data-transition="">
+		<header data-title="Bridge Score Calculator for Law of Total Tricks">
+	        <nav>
+	            <a href="#features" data-router="aside" data-icon="menu"></a>
+	        </nav>
+	  </header>
+		<article id="main-article" class="active">
+			<div id="dialog" title="Result">
+
+			</div>
+			<div id="accordion">
+				<div id="accordionContent">
+					<p>Prepared by the Students' Computer Team of Wah Yan College, Kowloon, Session 2010-2011.</p>
+					<p><br/>Press the setting key on the top left corner to set up.</p>
+					<p><br/>According to <a href="http://en.wikipedia.org/wiki/Law_of_total_tricks">Wikipedia</a>, LoTT can be stated as follows: The total number of tricks available on a deal is equal to the total number of trump cards both sides hold in their respective best suits, where the total number of tricks is defined as the sum of the number of tricks available to each side if they could choose trumps.</p>
+					<p><br/>So using this software, one may analyze his or her choice to overcall or pass is supported by LoTT or not by finding the expected gain or loss from the table generated.</p>
+					<p><br/>For usage against No Trump contracts, one may seek advice <a href="http://hp.vector.co.jp/authors/VA051022/Tripod/LoTT2.htm">here</a>. According to the website, the most popular version is that Total Tricks equals the number of opponent's trumps plus 7.</p>
+					<p><br/>Enjoy Bridge :)</p>
+				</div>
+			</div>
+		</article>	
+	</section>
+	<aside id="features">
+    <header data-title="Change Settings"></header>
+    <article class="active">
+      <div class="form">
+				<table>
+						<tr>
+						<td>
+							<table class='dispTable'>
+								<tr>
+									<th>Total Tricks</th>
+									<th>Vulnerability</th>
+									<th>Pair Being Doubled</th>
+								</tr>
+								<tr>
+									<td>
+										<select id="totalTricks" class="custom"></select>
+									</td>
+									<td>
+										<select id="vuln">
+											<option value="0">None</option>
+											<option value="1">We</option>
+											<option value="2">They</option>
+											<option value="3">Both</option>
+										</select>
+									</td>
+									<td>
+										<select id="dbledPair">
+											<option value="0">No</option>
+											<option value="1">We</option>
+											<option value="2">They</option>
+											<option value="3">Both</option>
+										</select>
+									</td>
+								</tr>
+							</table>
+							<table>	
+								<tr>
+									<th>Our Contract</th>
+									<th>Their Contract</th>
+								</tr>
+								<tr>
+									<td>
+										<select id="ourLevel"></select>
+										<select id="ourSuit">
+											<option value="3">No Trump</option>
+											<option value="2">Spade</option>
+											<option value="2">Heart</option>
+											<option value="1">Diamond</option>
+											<option value="1">Clubs</option>
+										</select>
+									</td>
+									<td>
+										<select id="theirLevel"></select>
+										<select id="theirSuit">
+											<option value="3">No Trump</option>
+											<option value="2">Spade</option>
+											<option value="2">Heart</option>
+											<option value="1">Diamond</option>
+											<option value="1">Clubs</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<button id="calPairScoreBtn">Calculate</button>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+    </article>
+	</aside>
+
+
+
+
+ 		<SCRIPT SRC="components/quo.js"></SCRIPT>
+    <SCRIPT SRC="components/lungo.js"></SCRIPT>
+    <script>
+        Lungo.init({
+            name: 'LOTT Calculator'
+        });
+    </script>
+</body>
+</html>
